@@ -1,0 +1,116 @@
+/* --- Contact.module.css --- */
+
+.contactSection {
+  /* Uses --header-height from your main App.css for scroll-to padding */
+  padding-top: calc(var(--header-height) + 10rem);
+  margin-top: calc(-1 * var(--header-height));
+  padding-bottom: 5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  max-width: 800px; /* A good max-width for a form */
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 80vh;
+
+  /* Animation: Initial state */
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+/* Animation: Visible state */
+.contactSection.isVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.contactHeadline {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  color: var(--text-light-primary);
+}
+:global(html.dark) .contactHeadline {
+  color: var(--text-dark-primary);
+}
+
+.contactSubheadline {
+  font-size: 1.125rem;
+  text-align: center;
+  color: var(--text-light-secondary);
+  margin-bottom: 3rem;
+}
+:global(html.dark) .contactSubheadline {
+  color: var(--text-dark-secondary);
+}
+
+.contactForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-light-secondary);
+}
+:global(html.dark) .label {
+  color: var(--text-dark-secondary);
+}
+
+.input {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--surface-light);
+  background-color: var(--background-light);
+  color: var(--text-light-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+:global(html.dark) .input {
+  background-color: var(--surface-dark);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-dark-primary);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(29, 99, 255, 0.2); /* var(--primary) with alpha */
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.submitButton {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--border-radius);
+  border: none;
+  cursor: pointer;
+  background-color: var(--primary);
+  color: white;
+  transition: all 0.3s;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.submitButton:hover {
+  background-color: #0d4fe0; /* Darker primary */
+  box-shadow: 0 8px 15px rgba(29, 99, 255, 0.2);
+  transform: translateY(-2px);
+}

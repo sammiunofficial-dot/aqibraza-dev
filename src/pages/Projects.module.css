@@ -1,0 +1,114 @@
+/* --- Projects.module.css --- */
+
+/* Define project-specific colors */
+.projectsMain {
+  --project-primary: #00bfff;
+  --project-secondary: #40e0d0;
+}
+
+.projectsMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2.5rem 1rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.projectsHeadingContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.projectsHeadline {
+  /* Use main app's theme variables */
+  color: var(--text-light-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.25rem;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.033em;
+  min-width: 18rem;
+  transition: color 0.3s;
+}
+/* Style for dark mode */
+:global(html.dark) .projectsHeadline {
+  color: var(--text-dark-primary);
+}
+
+/* --- Chips Filter --- */
+.chipsContainer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: flex;
+  height: 2.5rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  padding: 0 1rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  border: 1px solid var(--surface-light);
+  background-color: var(--background-light);
+  color: var(--text-light-secondary);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+:global(html.dark) .chip {
+  border: 1px solid var(--surface-dark);
+  background-color: rgba(255, 255, 255, 0.05); /* From original design */
+  color: var(--text-dark-secondary);
+}
+
+.chip:hover {
+  background-color: var(--surface-light);
+}
+:global(html.dark) .chip:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.chip.active {
+  background-color: rgba(0, 191, 255, 0.1); /* Use project-primary color */
+  color: var(--project-primary);
+  border-color: var(--project-primary);
+  font-weight: 700;
+}
+
+/* --- Project Grid --- */
+.projectGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+/* --- Responsive Grid --- */
+@media (min-width: 640px) {
+  .projectsMain {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  .projectsHeadline {
+    font-size: 3rem;
+  }
+  .projectGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .projectGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

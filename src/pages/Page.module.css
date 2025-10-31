@@ -1,0 +1,27 @@
+/* src/pages/Page.module.css */
+.pageContainer {
+  flex-grow: 1;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.pageHeader {
+  text-align: center;
+  padding-bottom: 3rem;
+  border-bottom: 1px solid var(--border-dark);
+  margin-bottom: 3rem;
+}
+
+.pageHeader h1 {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
+.pageHeader p {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+}
