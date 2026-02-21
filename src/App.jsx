@@ -7,6 +7,7 @@ import {
   GitBranch, PlayCircle, Layers, Disc
 } from 'lucide-react';
 
+import './App.css'
 
 //assets
 import medai from "./assets/medai.webp"
@@ -308,14 +309,24 @@ const App = () => {
   const visibleProjects = showAllProjects ? filteredProjects : filteredProjects.slice(0, 6);
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      alert('TRANSMISSION_SUCCESSFUL');
-      setFormState({ name: '', email: '', message: '' });
-    }, 2000);
-  };
+  e.preventDefault();
+
+  const yourEmail = "aqibraza.dev@gmail.com"; 
+  const subject = `Portfolio Contact from ${formState.name}`;
+  const body = `Name: ${formState.name}\nEmail: ${formState.email}\n\nMessage:\n${formState.message}`;
+
+  const mailtoLink = `mailto:${yourEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  // The modern, robust way to trigger mailto: without getting blocked
+  const link = document.createElement('a');
+  link.href = mailtoLink;
+  // Some browsers require the link to be in the DOM to be clicked
+  document.body.appendChild(link); 
+  link.click();
+  document.body.removeChild(link);
+
+  setFormState({ name: '', email: '', message: '' });
+};
 
   const handleChange = (e) => {
     setFormState({ ...formState, [e.target.name]: e.target.value });
@@ -431,7 +442,7 @@ const App = () => {
       <nav className="fixed top-0 w-full z-50 px-6 py-6 flex justify-between items-center mix-blend-difference text-white opacity-90 transition-all duration-500">
         <div className="text-sm tracking-widest uppercase font-light flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full bg-[#a3ff00] ${isMenuOpen ? 'animate-ping' : ''}`}></span>
-          System: {theme === 'dark' ? 'Dark' : 'Light'}
+          Open To Work 
         </div>
         <div className="hidden md:flex gap-8 text-sm font-light items-center">
           {['About', 'Skills','Projects', 'Achievements', 'Experience', 'Contact'].map((item) => (
@@ -486,7 +497,7 @@ const App = () => {
               </div>
               <span className="text-metallic drop-shadow-2xl z-0 transition-theme">lio</span>
             </h1>
-            <ScrollReveal delay={300}>
+            <ScrollReveal delay={200}>
               <div className="absolute bottom-[-15%] right-[5%] md:right-[15%] z-40 transform rotate-[-5deg]">
                  <div className="relative w-[300px] h-[100px]">
                    <svg width="300" height="100" viewBox="0 0 300 100" className="absolute top-0 left-0">
@@ -516,7 +527,7 @@ const App = () => {
             <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter mb-16 opacity-90">Profile</h3>
            </ScrollReveal>
            <div className="grid md:grid-cols-2 gap-16 items-center">
-              <ScrollReveal delay={200}>
+              <ScrollReveal delay={150}>
                 <div className="text-lg md:text-xl font-light leading-relaxed text-[var(--text-muted)] transition-theme">
                   <p className="mb-8">
                     I’m a passionate <span className="text-[var(--text-main)] font-medium transition-theme">Machine Learning Engineer</span> who thrives at the intersection of innovation and execution. 
@@ -535,7 +546,7 @@ const App = () => {
                 </div>
 
               </ScrollReveal>
-              <ScrollReveal delay={400}>
+              <ScrollReveal delay={300}>
                  <div className="relative group mx-auto w-full max-w-sm">
                     <div className="absolute -inset-1 bg-gradient-to-r from-[var(--accent)] to-[var(--text-main)] opacity-20 blur transition duration-500 group-hover:opacity-40"></div>
                     <div className="relative aspect-[3/4] overflow-hidden rounded-sm border border-[var(--border-color)] bg-[var(--bg-card)] transition-theme">
@@ -551,128 +562,139 @@ const App = () => {
       </section>
 
       {/* --- SKILLS SECTION --- */}
-      <section id="skills" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] transition-colors duration-700">
-         <div className="max-w-7xl mx-auto">
-            <ScrollReveal>
-               <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter mb-16 opacity-90 text-right">
-                 Capabilities
-               </h3>
-            </ScrollReveal>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {SKILLS_DATA.map((skill, i) => (
-                <ScrollReveal key={i} delay={i * 100}>
-                  <div className="cinematic-card p-6 flex flex-col items-center justify-center text-center h-48 group relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--bg-card)] opacity-0 group-hover:opacity-20 transition-opacity"></div>
-                    <div className="w-12 h-12 mb-5 relative flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2">
-                       {skill.logo ? (
-                         <img src={skill.logo} alt={skill.title} className="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500" />
-                       ) : (
-                         <Code className="w-full h-full text-[var(--text-muted)] group-hover:text-[var(--accent)]" />
-                       )}
-                    </div>
-                    <h4 className="text-[var(--text-main)] font-bold uppercase tracking-widest text-sm mb-1 transition-theme z-10">{skill.title}</h4>
-                    <p className="text-[var(--text-muted)] text-[10px] font-mono uppercase transition-theme z-10">{skill.subtitle}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
+<section id="skills" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] transition-colors duration-700">
+   <div className="max-w-7xl mx-auto">
+      <ScrollReveal>
+         <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter mb-16 opacity-90 text-right">
+           Capabilities
+         </h3>
+      </ScrollReveal>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {SKILLS_DATA.map((skill, i) => (
+          <ScrollReveal key={i} delay={i * 30}>
+            <div className="cinematic-card p-6 flex flex-col items-center justify-center text-center h-48 group relative overflow-hidden">
+              
+              {/* Background - Added md:group-hover and scroll-bg-effect */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--bg-card)] opacity-0 md:group-hover:opacity-20 transition-opacity scroll-bg-effect"></div>
+              
+              {/* Icon Wrapper - Safely removed the translation class here since the child animations handle it on mobile, and desktop hover handles it here */}
+              <div className="w-12 h-12 mb-5 relative flex items-center justify-center transition-transform duration-500 md:group-hover:scale-110 md:group-hover:-translate-y-2">
+                 {skill.logo ? (
+                   /* Image - Added scroll-img-effect */
+                   <img src={skill.logo} alt={skill.title} className="w-full h-full object-contain filter grayscale md:group-hover:grayscale-0 transition-all duration-500 scroll-img-effect" />
+                 ) : (
+                   /* Icon - Added scroll-icon-effect */
+                   <Code className="w-full h-full text-[var(--text-muted)] md:group-hover:text-[var(--accent)] transition-colors duration-500 scroll-icon-effect" />
+                 )}
+              </div>
+
+              <h4 className="text-[var(--text-main)] font-bold uppercase tracking-widest text-sm mb-1 transition-theme z-10">{skill.title}</h4>
+              <p className="text-[var(--text-muted)] text-[10px] font-mono uppercase transition-theme z-10">{skill.subtitle}</p>
             </div>
+          </ScrollReveal>
+        ))}
+      </div>
+   </div>
+</section>
+
+      {/* --- PROJECTS SECTION (UPDATED WITH MOBILE FIX & SMOOTH ANIMATION) --- */}
+<section id="projects" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] transition-colors duration-700">
+  <div className="max-w-7xl mx-auto">
+    <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+      <ScrollReveal>
+         <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter opacity-90 text-left">Selected Works</h3>
+      </ScrollReveal>
+      <ScrollReveal delay={70}>
+         <div className="flex flex-wrap gap-2 md:justify-end">
+            {FILTERS.map((filter) => (
+              <button key={filter.value} onClick={() => setActiveFilter(filter.value)}
+                className={`px-4 py-2 text-[10px] md:text-xs font-mono uppercase tracking-widest border transition-all duration-300 ${
+                  activeFilter === filter.value 
+                  ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-dim)] shadow-[0_0_10px_var(--accent-dim)]' 
+                  : 'border-[var(--border-color)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
+                }`}>
+                {filter.label}
+              </button>
+            ))}
          </div>
-      </section>
+      </ScrollReveal>
+    </div>
 
-      {/* --- PROJECTS SECTION (UPDATED WITH HOVER DESCRIPTION) --- */}
-      <section id="projects" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] transition-colors duration-700">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
-            <ScrollReveal>
-               <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter opacity-90 text-left">Selected Works</h3>
-            </ScrollReveal>
-            <ScrollReveal delay={100}>
-               <div className="flex flex-wrap gap-2 md:justify-end">
-                  {FILTERS.map((filter) => (
-                    <button key={filter.value} onClick={() => setActiveFilter(filter.value)}
-                      className={`px-4 py-2 text-[10px] md:text-xs font-mono uppercase tracking-widest border transition-all duration-300 ${
-                        activeFilter === filter.value 
-                        ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-dim)] shadow-[0_0_10px_var(--accent-dim)]' 
-                        : 'border-[var(--border-color)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
-                      }`}>
-                      {filter.label}
-                    </button>
-                  ))}
-               </div>
-            </ScrollReveal>
-          </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+       {visibleProjects.map((proj, i) => (
+          <ScrollReveal key={proj.id} delay={i * 100}>
+             {/* 1. Mobile Tap Fix: tabIndex="0", cursor-pointer, focus:outline-none */}
+             <div tabIndex="0" className="cinematic-card aspect-square relative group overflow-hidden flex flex-col justify-between cursor-pointer focus:outline-none">
+                
+                {/* Background */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60 z-10 transition-opacity duration-500 group-hover:opacity-90 group-focus:opacity-90 group-focus-within:opacity-90"></div>
+                <div className={`w-full h-full absolute inset-0 transition-all duration-700 group-hover:scale-110 group-focus:scale-110 group-focus-within:scale-110 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-200'}`}>
+                   <div className="flex items-center justify-center w-full h-full">
+                     <div className="absolute inset-0 z-0">
+                       <img src={proj.imageLink} alt={proj.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-40 group-focus:opacity-40 group-focus-within:opacity-40 group-hover:scale-110 group-focus:scale-110 group-focus-within:scale-110 transition-all duration-700" />
+                       <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-[var(--bg-card)]/80 to-transparent"></div>
+                     </div>
+                   </div>
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-             {visibleProjects.map((proj, i) => (
-                <ScrollReveal key={proj.id} delay={i * 100}>
-                   <div className="cinematic-card aspect-square relative group overflow-hidden flex flex-col justify-between">
-                      {/* Background */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60 z-10 transition-opacity duration-500 group-hover:opacity-90"></div>
-                      <div className={`w-full h-full absolute inset-0 transition-all duration-700 group-hover:scale-110 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-200'}`}>
-                         <div className="flex items-center justify-center w-full h-full">
-                           <div className="absolute inset-0 z-0">
-                             <img src={proj.imageLink} alt={proj.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
-                             <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-[var(--bg-card)]/80 to-transparent"></div>
+                {/* Header (Category) */}
+                <div className="relative z-20 p-6 flex justify-between items-start opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300 transform -translate-y-2 group-hover:translate-y-0 group-focus:translate-y-0 group-focus-within:translate-y-0">
+                   <span className="px-2 py-1 bg-[var(--accent)] text-black text-[10px] font-bold font-mono">{proj.category}</span>
+                </div>
+                
+                {/* 2. Action Buttons Fix: Removed max-md opacity hack, added pointer-events toggle */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100 transition-all duration-500 delay-100 pointer-events-none group-hover:pointer-events-auto group-focus:pointer-events-auto group-focus-within:pointer-events-auto">
+                   <a href={proj.links.git} target='_blank' rel="noreferrer" className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-[var(--accent)] hover:border-[var(--accent)] hover:text-black text-white transition-all transform hover:scale-110" title="View Code">
+                      <Github className="w-5 h-5" />
+                   </a>
+                   <a href={proj.links.live} target='_blank' rel="noreferrer" className=" p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-[var(--accent)] hover:border-[var(--accent)] hover:text-black text-white transition-all transform hover:scale-110" title="Live Demo">
+                      <ExternalLink className="w-5 h-5" />
+                   </a>
+                </div>
+
+                {/* Footer Info & Description Slide-Up */}
+                <div className="relative z-20 p-8 pt-0 transform transition-transform duration-500 group-hover:-translate-y-2 group-focus:-translate-y-2 group-focus-within:-translate-y-2">
+                   <div className="flex justify-between items-end">
+                      <div>
+                         <h4 className="text-xl font-bold text-white mb-1 tracking-wider group-hover:text-[var(--accent)] group-focus:text-[var(--accent)] group-focus-within:text-[var(--accent)] transition-colors">{proj.title}</h4>
+                         <p className="text-gray-400 text-xs font-mono uppercase tracking-widest mb-3">{proj.type}</p>
+                         
+                         {/* 3. Smooth h-auto Trick: Grid rows 0fr to 1fr */}
+                         <div className="grid grid-rows-[0fr] opacity-0 group-hover:grid-rows-[1fr] group-focus:grid-rows-[1fr] group-focus-within:grid-rows-[1fr] group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100 transition-all duration-500 overflow-hidden">
+                           <div className="overflow-hidden">
+                             {/* Description Text */}
+                             <p className="text-[10px] text-gray-300 mb-3 mt-1 leading-relaxed border-l-2 border-[var(--accent)] pl-2">
+                               {proj.desc}
+                             </p>
+                             
+                             {/* Tech Pills */}
+                             <div className="flex flex-wrap gap-2 pb-1">
+                               {proj.tech.map((t, idx) => (
+                                 <span key={idx} className="text-[9px] font-mono text-[var(--accent)] border border-[var(--accent)]/30 px-2 py-0.5 rounded bg-[var(--accent)]/10">
+                                   {t}
+                                 </span>
+                               ))}
+                             </div>
                            </div>
                          </div>
                       </div>
-
-                      {/* Header (Category) */}
-                      <div className="relative z-20 p-6 flex justify-between items-start opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform -translate-y-2 group-hover:translate-y-0">
-                         <span className="px-2 py-1 bg-[var(--accent)] text-black text-[10px] font-bold font-mono">{proj.category}</span>
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100">
-                         <a href={proj.links.git} target='_blank' className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-[var(--accent)] hover:border-[var(--accent)] hover:text-black text-white transition-all transform hover:scale-110" title="View Code">
-                            <Github className="w-5 h-5" />
-                         </a>
-                         <a href={proj.links.live} target='_blank' className=" p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-[var(--accent)] hover:border-[var(--accent)] hover:text-black text-white transition-all transform hover:scale-110" title="Live Demo">
-                            <ExternalLink className="w-5 h-5" />
-                         </a>
-                      </div>
-
-                      {/* Footer Info & Description Slide-Up */}
-                      <div className="relative z-20 p-8 pt-0 transform transition-transform duration-500 group-hover:-translate-y-2">
-                         <div className="flex justify-between items-end">
-                            <div>
-                               <h4 className="text-xl font-bold text-white mb-1 tracking-wider group-hover:text-[var(--accent)] transition-colors">{proj.title}</h4>
-                               <p className="text-gray-400 text-xs font-mono uppercase tracking-widest mb-3">{proj.type}</p>
-                               
-                               {/* Tech Stack & Description on Hover */}
-                               <div className="h-0 opacity-0 group-hover:opacity-100 group-hover:h-auto transition-all duration-500 delay-100 overflow-hidden">
-                                 {/* Description Text */}
-                                 <p className="text-[10px] text-gray-300 mb-3 leading-relaxed border-l-2 border-[var(--accent)] pl-2">
-                                   {proj.desc}
-                                 </p>
-                                 
-                                 {/* Tech Pills */}
-                                 <div className="flex flex-wrap gap-2">
-                                   {proj.tech.map((t, idx) => (
-                                     <span key={idx} className="text-[9px] font-mono text-[var(--accent)] border border-[var(--accent)]/30 px-2 py-0.5 rounded bg-[var(--accent)]/10">
-                                       {t}
-                                     </span>
-                                   ))}
-                                 </div>
-                               </div>
-                            </div>
-                         </div>
-                      </div>
                    </div>
-                </ScrollReveal>
-             ))}
-          </div>
-          
-          {filteredProjects.length > 6 && (
-             <div className="mt-12 flex justify-center">
-                <button onClick={() => setShowAllProjects(!showAllProjects)} className="group flex items-center gap-2 px-8 py-3 border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent)] transition-all duration-300 uppercase tracking-widest text-xs font-mono">
-                   <span>{showAllProjects ? 'System_Collapse' : 'Load_More_Data'}</span>
-                   {showAllProjects ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
+                </div>
              </div>
-          )}
-        </div>
-      </section>
+          </ScrollReveal>
+       ))}
+    </div>
+    
+    {filteredProjects.length > 6 && (
+       <div className="mt-12 flex justify-center">
+          <button onClick={() => setShowAllProjects(!showAllProjects)} className="group flex items-center gap-2 px-8 py-3 border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--accent)] transition-all duration-300 uppercase tracking-widest text-xs font-mono">
+             <span>{showAllProjects ? 'System_Collapse' : 'Load_More_Data'}</span>
+             {showAllProjects ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+       </div>
+    )}
+  </div>
+</section>
 
       {/* --- COMPETITIVE INDEX (UPDATED WITH KAGGLE BREAKDOWN) --- */}
       <section id="achievements" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] border-t border-[var(--border-color)] transition-colors duration-700">
@@ -691,7 +713,7 @@ const App = () => {
               }
 
               return (
-                <ScrollReveal key={index} delay={index * 150}>
+                <ScrollReveal key={index} delay={index * 100}>
                   <a href={item.link} target="_blank" rel="noopener noreferrer" className="block h-full">
                     <div className="cinematic-card p-0 flex flex-col h-72 relative overflow-hidden group">
                       
@@ -806,7 +828,7 @@ const App = () => {
             <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter mb-16 opacity-90">Experience</h3>
           </ScrollReveal>
           <div className="relative border-l border-[var(--border-color)] ml-4 md:ml-10 space-y-16 transition-colors duration-700">
-            <ScrollReveal delay={200}>
+            <ScrollReveal delay={150}>
               <div className="relative pl-12 md:pl-16 group">
                 <div className="absolute -left-[5px] top-2 w-[10px] h-[10px] rounded-full bg-[var(--accent)] shadow-[0_0_10px_var(--accent)] transition-transform duration-300 group-hover:scale-150"></div>
                 <div className="flex flex-col md:flex-row md:items-baseline justify-between mb-2">
@@ -849,7 +871,7 @@ const App = () => {
           </ScrollReveal>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {CERTIFICATES_DATA.map((cert, index) => (
-              <ScrollReveal key={index} delay={index * 150}>
+              <ScrollReveal key={index} delay={index * 100}>
                 <div className="cinematic-card cert-card p-8 h-full flex flex-col justify-between group cursor-default">
                    <div>
                       <div className="flex justify-between items-start mb-6">
@@ -887,36 +909,56 @@ const App = () => {
                 </div>
               </ScrollReveal>
               <div className="flex flex-col space-y-4">
-                {[{ name: "LinkedIn", url: "https://in.linkedin.com/in/aqibraza-dev" }, { name: "GitHub", url: "https://github.com/aqibraza-dev" }, { name: "Email", url: "mailto:aqibraza.dev@gmail.com" }]
-                  .map((link, i) => (
-                   <ScrollReveal key={i} delay={i * 100}>
-                    <a target='_blank' className="text-2xl text-[var(--text-main)] hover:text-[var(--accent)] transition-colors flex items-center group cursor-pointer transition-theme target:blank" href={link.url}>
-                      <span className="mr-4 text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors opacity-50 transition-theme">0{i + 1}.</span> {link.name}
-                      <ArrowUpRight className="ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[var(--accent)] w-5 h-5" />
-                    </a>
-                   </ScrollReveal>
-                ))}
-              </div>
+  {[{ name: "LinkedIn", url: "https://in.linkedin.com/in/aqibraza-dev" }, { name: "GitHub", url: "https://github.com/aqibrazadev" }, { name: "Email", url: "mailto:aqibraza.dev@gmail.com" }]
+    .map((link, i) => {
+      // Check if the link is an email
+      const isMail = link.url.startsWith('mailto:');
+      
+      return (
+       <ScrollReveal key={i} delay={i * 100}>
+        <a 
+          href={link.url}
+          // Only apply target="_blank" and rel attributes if it's NOT an email
+          target={isMail ? undefined : '_blank'}
+          rel={isMail ? undefined : 'noopener noreferrer'}
+          className="text-2xl text-[var(--text-main)] hover:text-[var(--accent)] flex items-center group cursor-pointer transition-theme transition-colors" 
+        >
+          <span className="mr-4 text-[var(--text-muted)] group-hover:text-[var(--accent)] opacity-50 transition-theme transition-colors">
+            0{i + 1}.
+          </span> 
+          {link.name}
+          <ArrowUpRight className="ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[var(--accent)] w-5 h-5" />
+        </a>
+       </ScrollReveal>
+      );
+  })}
+</div>
             </div>
-            <ScrollReveal delay={300}>
+            <ScrollReveal delay={200}>
               <form onSubmit={handleSubmit} className="space-y-8 w-full">
-                <div className="group">
-                  <label className="block text-xs uppercase tracking-widest text-[var(--text-muted)] mb-2 group-focus-within:text-[var(--accent)]">Your Name</label>
-                  <input name="name" value={formState.name} onChange={handleChange} className="input-cinematic w-full py-4 text-xl text-[var(--text-main)] placeholder-[var(--text-muted)]/30" placeholder="Enter your name" type="text" required />
-                </div>
-                <div className="group">
-                  <label className="block text-xs uppercase tracking-widest text-[var(--text-muted)] mb-2 group-focus-within:text-[var(--accent)]">Email Address</label>
-                  <input name="email" value={formState.email} onChange={handleChange} className="input-cinematic w-full py-4 text-xl text-[var(--text-main)] placeholder-[var(--text-muted)]/30" placeholder="hello@example.com" type="email" required />
-                </div>
-                <div className="group">
-                  <label className="block text-xs uppercase tracking-widest text-[var(--text-muted)] mb-2 group-focus-within:text-[var(--accent)]">Message</label>
-                  <textarea name="message" value={formState.message} onChange={handleChange} className="input-cinematic w-full py-4 text-xl text-[var(--text-main)] placeholder-[var(--text-muted)]/30 resize-none" placeholder="Tell me about your project..." rows="4" required></textarea>
-                </div>
-                <button type="submit" disabled={isSubmitting} className="group relative px-8 py-4 bg-[var(--text-main)] text-[var(--bg-main)] font-bold uppercase tracking-wider overflow-hidden hover:text-black transition-colors mt-8 w-full md:w-auto">
-                  <span className="relative z-10 flex items-center gap-2 justify-center">{isSubmitting ? 'Sending...' : 'Send Message'} {!isSubmitting && <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />}</span>
-                  <div className="absolute inset-0 bg-[var(--accent)] transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out z-0"></div>
-                </button>
-              </form>
+  <div className="group">
+    <label className="block text-xs uppercase tracking-widest text-[var(--text-muted)] mb-2 group-focus-within:text-[var(--accent)]">Your Name</label>
+    <input name="name" value={formState.name} onChange={handleChange} className="input-cinematic w-full py-4 text-xl text-[var(--text-main)] placeholder-[var(--text-muted)]/30 bg-transparent border-b border-[var(--border-color)] focus:border-[var(--accent)] outline-none transition-colors" placeholder="Enter your name" type="text" required />
+  </div>
+  
+  <div className="group">
+    <label className="block text-xs uppercase tracking-widest text-[var(--text-muted)] mb-2 group-focus-within:text-[var(--accent)]">Email Address</label>
+    <input name="email" value={formState.email} onChange={handleChange} className="input-cinematic w-full py-4 text-xl text-[var(--text-main)] placeholder-[var(--text-muted)]/30 bg-transparent border-b border-[var(--border-color)] focus:border-[var(--accent)] outline-none transition-colors" placeholder="hello@example.com" type="email" required />
+  </div>
+  
+  <div className="group">
+    <label className="block text-xs uppercase tracking-widest text-[var(--text-muted)] mb-2 group-focus-within:text-[var(--accent)]">Message</label>
+    <textarea name="message" value={formState.message} onChange={handleChange} className="input-cinematic w-full py-4 text-xl text-[var(--text-main)] placeholder-[var(--text-muted)]/30 bg-transparent border-b border-[var(--border-color)] focus:border-[var(--accent)] outline-none transition-colors resize-none" placeholder="Tell me about your project..." rows="4" required></textarea>
+  </div>
+  
+  <button type="submit" className="group relative px-8 py-4 bg-[var(--text-main)] text-[var(--bg-main)] font-bold uppercase tracking-wider overflow-hidden hover:text-black transition-colors mt-8 w-full md:w-auto">
+    <span className="relative z-10 flex items-center gap-2 justify-center">
+      Send
+      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+    </span>
+    <div className="absolute inset-0 bg-[var(--accent)] transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out z-0"></div>
+  </button>
+</form>
             </ScrollReveal>
           </div>
         </div>
