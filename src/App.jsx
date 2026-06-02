@@ -353,7 +353,7 @@ const PROJECT_DATA = [
     desc: "Unified Platform Containing Fishing Zone, Oceanography, and eDna Data."
   },
   { 
-    title: "Crop-Drop Bot", type: "RL Bot", id: "03", category: "ML", imageLink:"src/assets/eyantra.mp4",
+    title: "Crop-Drop Bot", type: "RL Bot", id: "03", category: "Robotics", imageLink:"src/assets/eyantra.mp4",
     tech: ["OpenAI Gym", ""], links: { git: "https://github.com/aqibraza-dev/e-yantra-cropdropbot", live: "#projects" },
     desc: "Build and program a RL bot to autonomously pick and place crops, showcasing precision and efficiency in agricultural robotics...."
   },
@@ -438,6 +438,7 @@ const FILTERS = [
   { label: "ML / AI", value: "ML" },
   { label: "DEEP LEARNING", value: "DL" },
   { label: "WEB / APP", value: "WEB" },
+  { label: "Robotics", value: "Robotics" },
   // { label: "ALGO / QUANT", value: "ALGO" },
 ];
 
