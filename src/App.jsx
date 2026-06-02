@@ -14,6 +14,8 @@ import medai from "./assets/medai.webp"
 import carprice from "./assets/carprice.webp"
 import marine from "./assets/marine.webp"
 import mnist from "./assets/mnist.webp"
+import Project from './Project';
+
 
 // --- UTILITY: Circular Progress (For LeetCode) ---
 const DonutChart = ({ data, size = 80, strokeWidth = 8, color, total, totalLimit }) => {
@@ -56,6 +58,160 @@ const DonutChart = ({ data, size = 80, strokeWidth = 8, color, total, totalLimit
         <span className="text-[6px] opacity-60 mt-0.5">/ {totalLimit}</span>
       </div>
     </div>
+  );
+};
+
+const CanvasBackground = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    // Optimization: disable alpha since we paint a solid background every frame
+    const ctx = canvas.getContext('2d', { alpha: false }); 
+    
+    let width, height, step;
+    
+    const initCanvas = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      
+      ctx.scale(dpr, dpr);
+
+      // Optimization: Cache step size on initialization and resize
+      const segments = Math.floor(width / 30); // Slightly optimized segment count
+      step = width / segments;
+    };
+    
+    initCanvas();
+
+    // Configuration for the 3D water layers
+    const numLayers = 8;
+    const layers = [];
+    
+    // Optimization: Pre-calculate all static layer variables here instead of in the render loop
+    for (let i = 0; i < numLayers; i++) {
+      const z = i / (numLayers - 1); // Depth from 0 (back) to 1 (front)
+      layers.push({
+        z,
+        speedOffset: Math.random() * 1000,
+        scale: 0.3 + z * 0.7,
+        parallaxSpeed: 0.005 + z * 0.015,
+        topAlpha: 0.1 + z * 0.2,
+        bottomAlpha: 0.02 + z * 0.08,
+        lineWidth: 0.5 + z * 2.5,
+        lineAlpha: 0.2 + z * 0.5
+      });
+    }
+
+    let time = 0;
+    let animationFrameId;
+
+    const render = () => {
+      time += 1;
+
+      // Draw dynamic animated background gradient
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+      const hue1 = 220 + Math.sin(time * 0.002) * 20; 
+      const hue2 = 260 + Math.sin(time * 0.003) * 30;
+      
+      bgGradient.addColorStop(0, `hsl(${hue1}, 50%, 2%)`);
+      bgGradient.addColorStop(1, `hsl(${hue2}, 60%, 6%)`);
+      
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, width, height);
+
+      // Render layers from back (z=0) to front (z=1)
+      layers.forEach((layer) => {
+        const points = [];
+        const baseY = height * 0.3 + (layer.z * height * 0.5); 
+        const baseHue = 200 + layer.z * 60 + Math.sin(time * 0.005) * 20;
+
+        for (let x = 0; x <= width + step; x += step) {
+          const timeX = x * 0.002 * layer.scale;
+          const timeMove = time * layer.parallaxSpeed + layer.speedOffset;
+          
+          const wave1 = Math.sin(timeX + timeMove) * 60 * layer.scale;
+          const wave2 = Math.cos(timeX * 2.5 - timeMove * 1.2) * 30 * layer.scale;
+          const wave3 = Math.sin(timeX * 0.5 + timeMove * 0.5) * 40 * layer.scale;
+          
+          points.push({ x, y: baseY + wave1 + wave2 + wave3 });
+        }
+
+        // Draw the fluid wave polygon
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+
+        for (let j = 0; j < points.length - 1; j++) {
+          const p0 = points[j];
+          const p1 = points[j + 1];
+          const midX = (p0.x + p1.x) / 2;
+          const midY = (p0.y + p1.y) / 2;
+          ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
+        }
+        ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+        
+        ctx.lineTo(width, height + 100);
+        ctx.lineTo(0, height + 100);
+        ctx.closePath();
+
+        // 1. Fill the water body
+        const waveGradient = ctx.createLinearGradient(0, baseY - 50, 0, height);
+        
+        waveGradient.addColorStop(0, `hsla(${baseHue}, 80%, 60%, ${layer.topAlpha})`);
+        waveGradient.addColorStop(1, `hsla(${baseHue + 30}, 90%, 10%, ${layer.bottomAlpha})`);
+        
+        ctx.fillStyle = waveGradient;
+        ctx.fill();
+
+        // 2. Draw the glowing crest
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let j = 0; j < points.length - 1; j++) {
+          const p0 = points[j];
+          const p1 = points[j + 1];
+          const midX = (p0.x + p1.x) / 2;
+          const midY = (p0.y + p1.y) / 2;
+          ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
+        }
+        
+        ctx.strokeStyle = `hsla(${baseHue}, 100%, 75%, ${layer.lineAlpha})`;
+        ctx.lineWidth = layer.lineWidth;
+        ctx.stroke();
+
+        if (layer.z > 0.7) {
+          ctx.strokeStyle = `hsla(255, 255, 255, ${layer.lineAlpha * 0.8})`;
+          ctx.lineWidth = layer.lineWidth * 0.4;
+          ctx.stroke();
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    const handleResize = () => {
+      initCanvas();
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 z-0 pointer-events-none"
+    />
   );
 };
 
@@ -175,8 +331,9 @@ const PROJECT_DATA = [
     tech: ["React", "CNN", "Sklearn", "FastApi"], links: { git: "https://github.com/aqibraza-dev/Med-AI", live: "https://med-ai-pro.vercel.app/" },
     desc: "Scalable unified web app which include major biotech related projects like Skin Cancer, diabetes prediction..."
   },
+  
   { 
-    title: "Car Price Prediction", type: "Regression based car price prediction model with interactive web app", id: "03", category: "ML", imageLink:carprice,
+    title: "Car Price Prediction", type: "Regression based car price prediction model with interactive web app", id: "06", category: "ML", imageLink:carprice,
     tech: ["Ensemble Learning", "Sklearn", "FastApi", "React"], links: { git: "https://github.com/aqibraza-dev/Car-Price-Predictor", live: "https://car-price-eight.vercel.app/" },
     desc: "Regression based car price prediction model with interactive web app using react and fastapi."
   },
@@ -195,11 +352,16 @@ const PROJECT_DATA = [
     tech: ["TensorFlow", "FastApi", "HTML/CSS", "T5 Transformer Model"], links: { git: "https://github.com/aqibraza-dev/grammar_correction_ai", live: "#" },
     desc: "Unified Platform Containing Fishing Zone, Oceanography, and eDna Data."
   },
+  { 
+    title: "Crop-Drop Bot", type: "RL Bot", id: "03", category: "ML", imageLink:"src/assets/eyantra.mp4",
+    tech: ["OpenAI Gym", ""], links: { git: "https://github.com/aqibraza-dev/e-yantra-cropdropbot", live: "#projects" },
+    desc: "Build and program a RL bot to autonomously pick and place crops, showcasing precision and efficiency in agricultural robotics...."
+  },
   
 ];
 
 // --- DATA: COMPETITIVE (Updated for Granular Kaggle Stats) ---
-const lcEasy = 8;
+const lcEasy = 10;
 const lcMed = 1;
 const lcHard = 1;
 
@@ -222,9 +384,9 @@ const COMPETITIVE_DATA = [
     details: { 
       type: "kaggle-stats", // New Type
       categories: [
-        { name: "Competitions", gold: 0, silver: 0, bronze: 0 },
+        { name: "Competitions", gold: 2, silver: 0, bronze: 0 },
         { name: "Datasets", gold: 0, silver: 0, bronze: 0 },
-        { name: "Code", gold: 0, silver: 0, bronze: 0 }
+        { name: "Code", gold: 0, silver: 3, bronze: 0 }
       ]
     }
   },
@@ -272,7 +434,7 @@ const CERTIFICATES_DATA = [
 ];
 
 const FILTERS = [
-  { label: "ALL SYSTEMS", value: "ALL" },
+  { label: "ALL", value: "ALL" },
   { label: "ML / AI", value: "ML" },
   { label: "DEEP LEARNING", value: "DL" },
   { label: "WEB / APP", value: "WEB" },
@@ -289,6 +451,7 @@ const App = () => {
 
   const [formState, setFormState] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -302,11 +465,15 @@ const App = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   const filteredProjects = activeFilter === "ALL" 
     ? PROJECT_DATA 
     : PROJECT_DATA.filter(p => p.category === activeFilter);
 
   const visibleProjects = showAllProjects ? filteredProjects : filteredProjects.slice(0, 6);
+
+  const visibleSkills = showAll ? SKILLS_DATA : SKILLS_DATA.slice(0, isMobile ? 10 : 16);
 
   const handleSubmit = (e) => {
   e.preventDefault();
@@ -437,6 +604,7 @@ const App = () => {
       `}</style>
 
       <ScrollProgress />
+      
 
       {/* --- NAVBAR --- */}
       <nav className="fixed top-0 w-full z-50 px-6 py-6 flex justify-between items-center mix-blend-difference text-white opacity-90 transition-all duration-500">
@@ -444,20 +612,20 @@ const App = () => {
           <span className={`w-2 h-2 rounded-full bg-[#a3ff00] ${isMenuOpen ? 'animate-ping' : ''}`}></span>
           Open To Work 
         </div>
-        <div className="hidden md:flex gap-8 text-sm font-light items-center">
+        <div className="hidden md:flex gap-8 text-sm text-white font-medium items-center ">
           {['About', 'Skills','Projects', 'Achievements', 'Experience', 'Contact'].map((item) => (
             <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-[var(--accent)] transition-colors cursor-pointer">
               {item}
             </a>
           ))}
-          <button onClick={toggleTheme} className="p-2 rounded-full hover:text-[var(--accent)] transition-colors">
+          {/* <button onClick={toggleTheme} className="p-2 rounded-full hover:text-[var(--accent)] transition-colors">
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+          </button> */}
         </div>
         <div className="flex md:hidden items-center gap-4">
-           <button onClick={toggleTheme} className="p-2 rounded-full hover:text-[var(--accent)] transition-colors">
+           {/* <button onClick={toggleTheme} className="p-2 rounded-full hover:text-[var(--accent)] transition-colors">
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+          </button> */}
           <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="z-50 p-2 text-[var(--accent)] hover:bg-[var(--accent-dim)] rounded-full transition-all">
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -465,7 +633,8 @@ const App = () => {
       </nav>
 
       {/* --- MOBILE OVERLAY --- */}
-      <div className={`fixed inset-0 z-40 bg-[var(--bg-overlay)] backdrop-blur-xl transition-all duration-500 flex flex-col justify-center items-center ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+      
+      <div className={`fixed inset-0 z-40 bg-[var(--bg-overlay)]/70 backdrop-blur-xl transition-all duration-500 flex flex-col justify-center items-center ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
           <div className="flex flex-col gap-8 text-center">
             {['About', 'Skills', 'Achievements', 'Experience', 'Projects', 'Contact'].map((item, i) => (
                <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setIsMenuOpen(false)}
@@ -481,11 +650,11 @@ const App = () => {
       <div className="fixed inset-0 bg-noise-texture opacity-40 pointer-events-none z-0"></div>
 
       {/* --- HERO SECTION --- */}
-      <main className="relative flex-none flex items-center justify-center overflow-hidden w-full h-screen z-10">
+      <main className="relative flex-none flex items-center justify-center overflow-hidden w-full h-screen z-10 opacity">
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center translate-y-[-5%]">
           <ScrollReveal>
              <h2 className="text-[var(--text-muted)] font-light tracking-[0.2em] text-sm md:text-lg mb-2 md:mb-[-1rem] md:self-start md:ml-[10%] uppercase z-20 transition-theme">
-              <DecodingText text="Software Engineer // AI Specialist" />
+              <DecodingText text="Aspiring Machine Learning Engineer" />
             </h2>
           </ScrollReveal>
           <div className="relative w-full text-center">
@@ -499,7 +668,7 @@ const App = () => {
             </h1>
             <ScrollReveal delay={200}>
               <div className="absolute bottom-[-15%] right-[5%] md:right-[15%] z-40 transform rotate-[-5deg]">
-                 <div className="relative w-[300px] h-[100px]">
+                 <div className="relative w-[300px] h-[100px] top-25">
                    <svg width="300" height="100" viewBox="0 0 300 100" className="absolute top-0 left-0">
                       <path d="M30,60 C50,50 60,90 90,60 C100,50 110,30 140,50 C160,70 170,80 200,50 C220,30 250,20 280,70" 
                         fill="none" stroke="var(--accent)" strokeWidth="2" className="signature-path" strokeLinecap="round" strokeLinejoin="round" />
@@ -519,6 +688,11 @@ const App = () => {
           </div>
         </div>
       </main>
+      <section id="about" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] transition-colors duration-700">
+        <ScrollReveal>
+        <Project/>
+        </ScrollReveal>
+        </section>
 
       {/* --- ABOUT SECTION --- */}
       <section id="about" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] transition-colors duration-700">
@@ -550,8 +724,8 @@ const App = () => {
                  <div className="relative group mx-auto w-full max-w-sm">
                     <div className="absolute -inset-1 bg-gradient-to-r from-[var(--accent)] to-[var(--text-main)] opacity-20 blur transition duration-500 group-hover:opacity-40"></div>
                     <div className="relative aspect-[3/4] overflow-hidden rounded-sm border border-[var(--border-color)] bg-[var(--bg-card)] transition-theme">
-                      <img src="https://media.licdn.com/dms/image/v2/D5603AQG8kFP425b7zA/profile-displayphoto-scale_200_200/B56ZeDHHD3HUAY-/0/1750251371061?e=2147483647&v=beta&t=S2XV-tk-hTeri5msoD7qYRZOVF7kVxmGFoL0XYBsIOA" 
-                        alt="Profile" className="w-full h-full object-cover filter grayscale sepia-[0.2] opacity-80 transition-all duration-700 group-hover:grayscale-0 group-hover:sepia-0 group-hover:opacity-100 group-hover:scale-105" />
+                      <img src="https://media.licdn.com/dms/image/v2/D4D03AQHMbXUJYBg1Zw/profile-displayphoto-scale_200_200/B4DZ1obEGsIcAY-/0/1775573420858?e=1777507200&v=beta&t=-ooYGpDvCU7l_THRfCRMdBHtd5xmT1wxm4kkdMB9SJo" 
+                        alt="Profile" className="w-full h-full object-cover filter opacity-80 transition-all duration-700 group-hover:grayscale-0 group-hover:sepia-0 group-hover:opacity-100 group-hover:scale-105" />
                       <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(163,255,0,0.05)_50%)] bg-[length:100%_4px] pointer-events-none z-10"></div>
                       <div className="absolute top-0 left-0 w-full h-[2px] bg-[var(--accent)] shadow-[0_0_15px_var(--accent)] opacity-60 animate-[scan_4s_linear_infinite] z-20"></div>
                     </div>
@@ -560,41 +734,92 @@ const App = () => {
            </div>
         </div>
       </section>
-
+            <CanvasBackground/>
       {/* --- SKILLS SECTION --- */}
-<section id="skills" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] transition-colors duration-700">
-   <div className="max-w-7xl mx-auto">
-      <ScrollReveal>
-         <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter mb-16 opacity-90 text-right">
-           Capabilities
-         </h3>
-      </ScrollReveal>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {SKILLS_DATA.map((skill, i) => (
-          <ScrollReveal key={i} delay={i * 30}>
-            <div className="cinematic-card p-6 flex flex-col items-center justify-center text-center h-48 group relative overflow-hidden">
-              
-              {/* Background - Added md:group-hover and scroll-bg-effect */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--bg-card)] opacity-0 md:group-hover:opacity-20 transition-opacity scroll-bg-effect"></div>
-              
-              {/* Icon Wrapper - Safely removed the translation class here since the child animations handle it on mobile, and desktop hover handles it here */}
-              <div className="w-12 h-12 mb-5 relative flex items-center justify-center transition-transform duration-500 md:group-hover:scale-110 md:group-hover:-translate-y-2">
-                 {skill.logo ? (
-                   /* Image - Added scroll-img-effect */
-                   <img src={skill.logo} alt={skill.title} className="w-full h-full object-contain filter grayscale md:group-hover:grayscale-0 transition-all duration-500 scroll-img-effect" />
-                 ) : (
-                   /* Icon - Added scroll-icon-effect */
-                   <Code className="w-full h-full text-[var(--text-muted)] md:group-hover:text-[var(--accent)] transition-colors duration-500 scroll-icon-effect" />
-                 )}
-              </div>
+<section id="skills" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)]/50 transition-colors duration-700 overflow-hidden">
+  
+  
+  <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[var(--accent)] opacity-[0.03] blur-[150px] rounded-full pointer-events-none"></div>
 
-              <h4 className="text-[var(--text-main)] font-bold uppercase tracking-widest text-sm mb-1 transition-theme z-10">{skill.title}</h4>
-              <p className="text-[var(--text-muted)] text-[10px] font-mono uppercase transition-theme z-10">{skill.subtitle}</p>
+  <div className="max-w-7xl mx-auto relative z-10">
+    <ScrollReveal>
+      <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter mb-12 md:mb-16 opacity-90 text-right">
+        Skills
+      </h3>
+    </ScrollReveal>
+
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">
+      {visibleSkills.map((skill, i) => (
+        <ScrollReveal key={i} delay={i * (isMobile ? 30 : 20)}>
+          {/* Creating a modern card background with animations and layered hover effects */}
+          <div 
+            className="group relative flex flex-col items-center justify-center text-center h-40 md:h-48 p-6 rounded-2xl border border-white/5 bg-white/[0.015] backdrop-blur-sm cursor-pointer transition-all duration-500 hover:-translate-y-1 hover:bg-white/[0.04] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-white/10 overflow-hidden"
+            style={{
+              // Fluid Top-Left to Reset animation for Web
+              animation: !isMobile ? `fluidTopLeft 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) ${i * 0.05}s both` : 'none'
+            }}
+          >
+            {/* Modern Hover Effect: Top-Left Glare Sweep */}
+            <div className="absolute -top-12 -left-12 w-32 h-32 bg-[var(--accent,rgba(255,255,255,0.4))] blur-[50px] opacity-0 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none rounded-full" />
+            
+            {/* Secondary Sweep Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent,rgba(255,255,255,0.05))] via-transparent to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none" />
+
+            <div className="w-10 h-10 md:w-12 md:h-12 mb-4 relative flex items-center justify-center transition-transform duration-500 md:group-hover:scale-110 md:group-hover:-translate-y-1">
+              {skill.logo ? (
+                <img 
+                  src={skill.logo} 
+                  alt={skill.title} 
+                  className="w-full h-full object-contain filter opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 drop-shadow-md" 
+                />
+              ) : (
+                <Code className="w-full h-full text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors duration-500" />
+              )}
             </div>
-          </ScrollReveal>
-        ))}
+
+            <h4 className="text-[var(--text-main)] font-semibold uppercase tracking-wider text-xs md:text-sm mb-1 z-10 transition-colors">
+              {skill.title}
+            </h4>
+            <p className="text-[var(--text-muted)] text-[9px] md:text-[10px] font-mono uppercase tracking-widest z-10 opacity-70 group-hover:opacity-100 transition-opacity">
+              {skill.subtitle}
+            </p>
+          </div>
+        </ScrollReveal>
+      ))}
+    </div>
+
+    {/* Mobile "Load More" Button */}
+    {isMobile && SKILLS_DATA.length > 10 && (
+      <div className="mt-12 flex justify-center w-full">
+        <button 
+          onClick={() => setShowAll(!showAll)}
+          className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-[11px] font-mono uppercase tracking-[0.2em] text-[var(--text-main)] hover:bg-white/10 hover:border-white/20 transition-all duration-300 active:scale-95 z-20"
+        >
+          {showAll ? (
+            <>Show Less <ChevronUp className="w-4 h-4" /></>
+          ) : (
+            <>View All {SKILLS_DATA.length} <ChevronDown className="w-4 h-4" /></>
+          )}
+        </button>
       </div>
-   </div>
+    )}
+  </div>
+
+  {/* Embedded CSS for the Keyframe Animation */}
+  <style>{`
+    @keyframes fluidTopLeft {
+      0% {
+        opacity: 0;
+        transform: translate(-30px, -30px) scale(0.95);
+        filter: blur(4px);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+        filter: blur(0px);
+      }
+    }
+  `}</style>
 </section>
 
       {/* --- PROJECTS SECTION (UPDATED WITH MOBILE FIX & SMOOTH ANIMATION) --- */}
@@ -602,13 +827,13 @@ const App = () => {
   <div className="max-w-7xl mx-auto">
     <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
       <ScrollReveal>
-         <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter opacity-90 text-left">Selected Works</h3>
+         <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter opacity-90 text-left">Projects</h3>
       </ScrollReveal>
       <ScrollReveal delay={70}>
-         <div className="flex flex-wrap gap-2 md:justify-end">
+         <div className="flex flex-wrap gap-2 md:justify-end ">
             {FILTERS.map((filter) => (
               <button key={filter.value} onClick={() => setActiveFilter(filter.value)}
-                className={`px-4 py-2 text-[10px] md:text-xs font-mono uppercase tracking-widest border transition-all duration-300 ${
+                className={`px-4 py-2 text-[10px] md:text-xs font-mono uppercase tracking-widest border transition-all duration-300 rounded-full ${
                   activeFilter === filter.value 
                   ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-dim)] shadow-[0_0_10px_var(--accent-dim)]' 
                   : 'border-[var(--border-color)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
@@ -624,7 +849,7 @@ const App = () => {
        {visibleProjects.map((proj, i) => (
           <ScrollReveal key={proj.id} delay={i * 100}>
              {/* 1. Mobile Tap Fix: tabIndex="0", cursor-pointer, focus:outline-none */}
-             <div tabIndex="0" className="cinematic-card aspect-square relative group overflow-hidden flex flex-col justify-between cursor-pointer focus:outline-none">
+             <div tabIndex="0" className="cinematic-card aspect-square relative group overflow-hidden flex flex-col justify-between cursor-pointer focus:outline-none rounded-lg">
                 
                 {/* Background */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60 z-10 transition-opacity duration-500 group-hover:opacity-90 group-focus:opacity-90 group-focus-within:opacity-90"></div>
@@ -695,9 +920,9 @@ const App = () => {
     )}
   </div>
 </section>
-
+      <CanvasBackground/>
       {/* --- COMPETITIVE INDEX (UPDATED WITH KAGGLE BREAKDOWN) --- */}
-      <section id="achievements" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] border-t border-[var(--border-color)] transition-colors duration-700">
+      <section id="achievements" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)]/50 border-t border-[var(--border-color)] transition-colors duration-700 ">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal>
             <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter mb-16 opacity-90">
@@ -705,7 +930,7 @@ const App = () => {
             </h3>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 rounded-lg">
             {COMPETITIVE_DATA.map((item, index) => {
               let dynamicTotal = 0;
               if (item.details?.stats) {
@@ -715,7 +940,7 @@ const App = () => {
               return (
                 <ScrollReveal key={index} delay={index * 100}>
                   <a href={item.link} target="_blank" rel="noopener noreferrer" className="block h-full">
-                    <div className="cinematic-card p-0 flex flex-col h-72 relative overflow-hidden group">
+                    <div className="cinematic-card p-0 flex flex-col h-72 relative overflow-hidden group rounded-lg">
                       
                       {item.details.type === 'image-card' ? (
                         <>
@@ -770,19 +995,19 @@ const App = () => {
                                     <div className="flex gap-2">
                                       {cat.gold > 0 && (
                                         <div className="flex items-center gap-1" title="Gold">
-                                           <div className="w-3 h-3 rounded-full bg-[#FFD700] border border-[#FFD700]/50 shadow-[0_0_5px_#FFD700]"></div>
+                                           {/* <div className="w-3 h-3 rounded-full bg-[#FFD700] border border-[#FFD700]/50 shadow-[0_0_5px_#FFD700]"></div> */}
                                            <span className="font-mono text-[10px] text-[var(--text-main)]">{cat.gold}</span>
                                         </div>
                                       )}
                                       {cat.silver > 0 && (
                                         <div className="flex items-center gap-1" title="Silver">
-                                           <div className="w-3 h-3 rounded-full bg-[#C0C0C0] border border-[#C0C0C0]/50 shadow-[0_0_5px_#C0C0C0]"></div>
+                                           {/* <div className="w-3 h-3 rounded-full bg-[#C0C0C0] border border-[#C0C0C0]/50 shadow-[0_0_5px_#C0C0C0]"></div> */}
                                            <span className="font-mono text-[10px] text-[var(--text-main)]">{cat.silver}</span>
                                         </div>
                                       )}
                                       {cat.bronze > 0 && (
                                         <div className="flex items-center gap-1" title="Bronze">
-                                           <div className="w-3 h-3 rounded-full bg-[#CD7F32] border border-[#CD7F32]/50 shadow-[0_0_5px_#CD7F32]"></div>
+                                           {/* <div className="w-3 h-3 rounded-full bg-[#CD7F32] border border-[#CD7F32]/50 shadow-[0_0_5px_#CD7F32]"></div> */}
                                            <span className="font-mono text-[10px] text-[var(--text-main)]">{cat.bronze}</span>
                                         </div>
                                       )}
@@ -820,7 +1045,7 @@ const App = () => {
           </div>
         </div>
       </section>
-
+            
       {/* --- EXPERIENCE SECTION --- */}
       <section id="experience" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] transition-colors duration-700">
         <div className="max-w-7xl mx-auto">
@@ -860,13 +1085,13 @@ const App = () => {
         </div>
       </section>
 
-
+            <CanvasBackground/>
       {/* --- CERTIFICATES SECTION (UPDATED WITH LINKS) --- */}
-      <section id="certificates" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)] border-t border-[var(--border-color)] transition-colors duration-700">
+      <section id="certificates" className="relative w-full py-24 px-6 md:px-12 lg:px-24 z-20 bg-[var(--bg-main)]/80 border-t border-[var(--border-color)] transition-colors duration-700">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal>
              <h3 className="text-metallic text-4xl md:text-6xl font-['Montserrat'] font-bold uppercase tracking-tighter opacity-90 text-right mb-16">
-                Licenses & Certs
+                Certificates
              </h3>
           </ScrollReveal>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -884,7 +1109,7 @@ const App = () => {
                    <div className="mt-8 pt-4 border-t border-[var(--border-color)] flex justify-between items-center text-xs font-mono text-[var(--text-muted)] transition-theme">
                       <span>{cert.date}</span>
                       <a href={cert.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 group-hover:text-[var(--text-main)] transition-colors cursor-pointer hover:underline">
-                         <span>VERIFY</span>
+                         <span>VIEW</span>
                          <ExternalLink className="w-3 h-3" />
                       </a>
                    </div>
@@ -969,7 +1194,7 @@ const App = () => {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex flex-col items-center md:items-start">
             <span className="font-['Sacramento',cursive] text-4xl text-[var(--accent)] drop-shadow-[0_0_5px_rgba(163,0,225,0.3)] mb-2">Aqib Raza</span>
-            <p className="text-xs uppercase tracking-widest font-mono opacity-60">Software Engineer & AI Specialist</p>
+            <p className="text-xs uppercase tracking-widest font-mono opacity-60">Aspiring AI/ML Engineer</p>
           </div>
           <div className="text-xs font-mono uppercase text-center md:text-right opacity-60 transition-theme">
             <p>© 2026 Aqib Raza. All rights reserved.</p>
