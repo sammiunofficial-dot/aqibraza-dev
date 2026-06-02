@@ -3,6 +3,7 @@ import { Github, Globe, TerminalSquare, ChevronLeft, ChevronRight } from 'lucide
 import medai from "./assets/medai.webp"
 import marine from "./assets/marine.webp"
 import mnist from "./assets/mnist.webp"
+import eyantra_vid from "./assets/eyantra.mp4"
 
 // --- Data ---
 const demoData = [
@@ -13,7 +14,7 @@ const demoData = [
     description: 'Scalable unified web app which include major biotech related projects like Skin Cancer, diabetes prediction....',
     // FIX: Changed from './assets' to '/assets' so the public folder resolves it correctly
     image: medai, 
-    windowTitle: 'terax · medai',
+    windowTitle: 'projects · medai',
     githubUrl: 'https://github.com/aqibraza-dev/Med-AI',
     websiteUrl: 'https://med-ai-pro.vercel.app/'
   },
@@ -22,7 +23,7 @@ const demoData = [
     category: 'e-Yantra(Organized by IIT Bombay)',
     title: 'Crop-Drop Bot',
     description: 'Build and program a RL bot to autonomously pick and place crops, showcasing precision and efficiency in agricultural robotics.',
-    image: 'src/assets/eyantra.mp4',
+    image:eyantra_vid ,
     windowTitle: 'projects · e-yantra',
     githubUrl: 'https://github.com'
   },
@@ -32,7 +33,7 @@ const demoData = [
     title: 'AI Driven Marine Data Platform App',
     description: 'Unified Platform Containing Fishing Zone, Oceanography, and eDna Data',
     image: marine,
-    windowTitle: 'terax ·marine-data',
+    windowTitle: 'projects ·marine-data',
     githubUrl: 'https://github.com/aqibraza-dev',
     websiteUrl: 'https://ai-data-platform-two.vercel.app/'
   },
@@ -42,7 +43,7 @@ const demoData = [
     title: 'Hand Digit Classification App',
     description: 'A distraction-free environment that puts your code and terminal output front and center.',
     image: mnist,
-    windowTitle: 'terax · mnist',
+    windowTitle: 'projects · mnist',
     githubUrl: 'https://github.com/aqibraza-dev',
     websiteUrl:'https://ai-data-platform-two.vercel.app/',
   }
