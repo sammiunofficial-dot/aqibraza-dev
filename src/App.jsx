@@ -66,10 +66,9 @@ const CanvasBackground = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    // Optimization: disable alpha since we paint a solid background every frame
-    const ctx = canvas.getContext('2d', { alpha: false }); 
+    const ctx = canvas.getContext('2d');
     
-    let width, height, step;
+    let width, height;
     
     const initCanvas = () => {
       width = window.innerWidth;
@@ -82,115 +81,142 @@ const CanvasBackground = () => {
       canvas.style.height = `${height}px`;
       
       ctx.scale(dpr, dpr);
-
-      // Optimization: Cache step size on initialization and resize
-      const segments = Math.floor(width / 30); // Slightly optimized segment count
-      step = width / segments;
     };
     
     initCanvas();
 
-    // Configuration for the 3D water layers
-    const numLayers = 8;
-    const layers = [];
-    
-    // Optimization: Pre-calculate all static layer variables here instead of in the render loop
-    for (let i = 0; i < numLayers; i++) {
-      const z = i / (numLayers - 1); // Depth from 0 (back) to 1 (front)
-      layers.push({
-        z,
-        speedOffset: Math.random() * 1000,
-        scale: 0.3 + z * 0.7,
-        parallaxSpeed: 0.005 + z * 0.015,
-        topAlpha: 0.1 + z * 0.2,
-        bottomAlpha: 0.02 + z * 0.08,
-        lineWidth: 0.5 + z * 2.5,
-        lineAlpha: 0.2 + z * 0.5
+    const lines = [];
+    const numLines = 85; // Adjusted slightly for optimal density with the cloth mesh
+
+    // Initialize evenly spaced horizontal lines to form the fabric mesh
+    for (let i = 0; i < numLines; i++) {
+      const baseOpacity = Math.random() * 0.06 + 0.02;
+      const baseThickness = Math.random() * 1.2 + 0.5;
+      
+      lines.push({
+        y: (i / numLines) * (height * 2) - (height * 0.5), // Cover space above and below viewport
+        baseOpacity: baseOpacity,
+        currentOpacity: baseOpacity,
+        baseThickness: baseThickness,
+        currentThickness: baseThickness,
+        mobileGlow: 0 
       });
     }
 
+    // Start mouse off-screen or center
+    let mouse = { x: width / 2, y: -height, targetX: width / 2, targetY: -height };
     let time = 0;
     let animationFrameId;
 
+    const handleMouseMove = (e) => {
+      mouse.targetX = e.clientX;
+      mouse.targetY = e.clientY;
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
     const render = () => {
       time += 1;
-
-      // Draw dynamic animated background gradient
-      const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-      const hue1 = 220 + Math.sin(time * 0.002) * 20; 
-      const hue2 = 260 + Math.sin(time * 0.003) * 30;
+      const isMobile = width < 768;
       
-      bgGradient.addColorStop(0, `hsl(${hue1}, 50%, 2%)`);
-      bgGradient.addColorStop(1, `hsl(${hue2}, 60%, 6%)`);
-      
-      ctx.fillStyle = bgGradient;
-      ctx.fillRect(0, 0, width, height);
+      // Fluid mouse interpolation (smooth drag effect)
+      mouse.x += (mouse.targetX - mouse.x) * 0.08;
+      mouse.y += (mouse.targetY - mouse.y) * 0.08;
 
-      // Render layers from back (z=0) to front (z=1)
-      layers.forEach((layer) => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Additive blending for glowing light intersections
+      ctx.globalCompositeOperation = 'screen';
+
+      lines.forEach((line) => {
         const points = [];
-        const baseY = height * 0.3 + (layer.z * height * 0.5); 
-        const baseHue = 200 + layer.z * 60 + Math.sin(time * 0.005) * 20;
+        let minMouseDist = Infinity;
+        
+        // Calculate points across the width of the screen to form the cloth folds
+        const segments = 40; // Number of articulation points per line
+        const step = width / segments;
 
         for (let x = 0; x <= width + step; x += step) {
-          const timeX = x * 0.002 * layer.scale;
-          const timeMove = time * layer.parallaxSpeed + layer.speedOffset;
-          
-          const wave1 = Math.sin(timeX + timeMove) * 60 * layer.scale;
-          const wave2 = Math.cos(timeX * 2.5 - timeMove * 1.2) * 30 * layer.scale;
-          const wave3 = Math.sin(timeX * 0.5 + timeMove * 0.5) * 40 * layer.scale;
-          
-          points.push({ x, y: baseY + wave1 + wave2 + wave3 });
+          // Cloth Math: Overlapping sine waves based on both X and Y coordinates 
+          // create interconnected folds rather than random independent lines.
+          const noiseX = x * 0.0015;
+          const noiseY = line.y * 0.002;
+
+          const wave1 = Math.sin(noiseX + noiseY + time * 0.008) * 120;
+          const wave2 = Math.cos(noiseX * 1.5 - noiseY + time * 0.005) * 80;
+          const wave3 = Math.sin(noiseX * 0.5 + time * 0.01) * 50;
+
+          let yPos = line.y + wave1 + wave2 + wave3;
+
+          // Calculate distance to mouse for fluid repulsion
+          const dx = x - mouse.x;
+          const dy = yPos - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < minMouseDist) minMouseDist = dist;
+
+          // Deform the fabric away from the cursor
+          if (dist < 350) {
+            const force = Math.pow((350 - dist) / 350, 2); // Smooth exponential falloff
+            yPos += (dy / dist) * force * 80;
+          }
+
+          points.push({ x, y: yPos });
         }
 
-        // Draw the fluid wave polygon
+        // Determine target styling based on hover (web) or random pulse (mobile)
+        let targetOp = line.baseOpacity;
+        let targetThick = line.baseThickness;
+
+        if (isMobile) {
+          // Mobile: Random glowing pulses
+          if (Math.random() < 0.0005) line.mobileGlow = 1.0;
+          
+          if (line.mobileGlow > 0) {
+            targetOp = Math.min(1, line.baseOpacity + 0.4 * line.mobileGlow);
+            targetThick = line.baseThickness + 2.5 * line.mobileGlow;
+            line.mobileGlow -= 0.008; // Smooth fade out
+          }
+        } else {
+          // Web: Smooth hover glow based on the closest point of the line to the mouse
+          if (minMouseDist < 250) {
+            const intensity = Math.pow(1 - minMouseDist / 250, 2); 
+            targetOp = Math.min(1, line.baseOpacity + 0.7 * intensity);
+            targetThick = line.baseThickness + 3.5 * intensity;
+          }
+        }
+
+        // Ease current values towards target values for ultimate fluidity
+        line.currentOpacity += (targetOp - line.currentOpacity) * 0.1;
+        line.currentThickness += (targetThick - line.currentThickness) * 0.1;
+
+        // Draw the smoothly interpolated curve through the calculated points
         ctx.beginPath();
         ctx.moveTo(points[0].x, points[0].y);
 
         for (let j = 0; j < points.length - 1; j++) {
           const p0 = points[j];
           const p1 = points[j + 1];
+          // Use midpoints to draw perfect quadratic bezier curves between segments
           const midX = (p0.x + p1.x) / 2;
           const midY = (p0.y + p1.y) / 2;
           ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
         }
         ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-        
-        ctx.lineTo(width, height + 100);
-        ctx.lineTo(0, height + 100);
-        ctx.closePath();
 
-        // 1. Fill the water body
-        const waveGradient = ctx.createLinearGradient(0, baseY - 50, 0, height);
-        
-        waveGradient.addColorStop(0, `hsla(${baseHue}, 80%, 60%, ${layer.topAlpha})`);
-        waveGradient.addColorStop(1, `hsla(${baseHue + 30}, 90%, 10%, ${layer.bottomAlpha})`);
-        
-        ctx.fillStyle = waveGradient;
-        ctx.fill();
-
-        // 2. Draw the glowing crest
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let j = 0; j < points.length - 1; j++) {
-          const p0 = points[j];
-          const p1 = points[j + 1];
-          const midX = (p0.x + p1.x) / 2;
-          const midY = (p0.y + p1.y) / 2;
-          ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
-        }
-        
-        ctx.strokeStyle = `hsla(${baseHue}, 100%, 75%, ${layer.lineAlpha})`;
-        ctx.lineWidth = layer.lineWidth;
+        // Draw outer soft fabric thread
+        ctx.strokeStyle = `rgba(255, 255, 255, ${line.currentOpacity})`;
+        ctx.lineWidth = line.currentThickness;
         ctx.stroke();
 
-        if (layer.z > 0.7) {
-          ctx.strokeStyle = `hsla(255, 255, 255, ${layer.lineAlpha * 0.8})`;
-          ctx.lineWidth = layer.lineWidth * 0.4;
+        // Draw inner bright core if the line is thickened (hovered/pulsing)
+        if (line.currentThickness > 2) {
+          ctx.strokeStyle = `rgba(255, 255, 255, ${line.currentOpacity * 1.5})`;
+          ctx.lineWidth = line.currentThickness * 0.3;
           ctx.stroke();
         }
       });
 
+      ctx.globalCompositeOperation = 'source-over';
       animationFrameId = requestAnimationFrame(render);
     };
 
@@ -202,6 +228,7 @@ const CanvasBackground = () => {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
     };
@@ -211,6 +238,7 @@ const CanvasBackground = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 z-0 pointer-events-none"
+      style={{ background: 'linear-gradient(to bottom, #0a0a0a, #000000)' }}
     />
   );
 };
