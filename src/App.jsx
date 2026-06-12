@@ -6,6 +6,7 @@ import {
   ExternalLink, ShieldCheck, Trophy, TrendingUp, ChevronDown, ChevronUp,
   GitBranch, PlayCircle, Layers, Disc
 } from 'lucide-react';
+import CanvasBackground from './BackgroundAnimation';
 
 import './App.css'
 
@@ -61,7 +62,8 @@ const DonutChart = ({ data, size = 80, strokeWidth = 8, color, total, totalLimit
   );
 };
 
-const CanvasBackground = () => {
+
+const CanvasBackground1 = () => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -242,6 +244,7 @@ const CanvasBackground = () => {
     />
   );
 };
+
 
 // --- UTILITY: Scroll Progress Bar ---
 const ScrollProgress = () => {
@@ -702,9 +705,11 @@ const App = () => {
                       <path d="M30,60 C50,50 60,90 90,60 C100,50 110,30 140,50 C160,70 170,80 200,50 C220,30 250,20 280,70" 
                         fill="none" stroke="var(--accent)" strokeWidth="2" className="signature-path" strokeLinecap="round" strokeLinejoin="round" />
                    </svg>
-                   <span className="absolute top-0 left-0 font-['Sacramento',cursive] text-6xl md:text-8xl text-[var(--accent)] drop-shadow-[0_0_10px_rgba(0, 102, 255,0.5)] opacity-90 mix-blend-screen">
-                     Aqib Raza
-                   </span>
+                   <span
+                    className="absolute top-0 left-0 whitespace-nowrap font-['Sacramento',cursive] text-6xl md:text-8xl text-[var(--accent)] drop-shadow-[0_0_10px_rgba(0,102,255,0.5)] opacity-90 mix-blend-screen"
+                  >
+                  Aqib Raza
+                  </span>
                  </div>
               </div>
             </ScrollReveal>
