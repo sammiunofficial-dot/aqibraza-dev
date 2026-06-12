@@ -76,7 +76,6 @@ const CanvasBackground = () => {
           float mouseDist = distance(st, mouse);
           
           if (u_isMobile < 0.5) {
-              // Smooth repulsion field around the cursor
               interaction = (mouse - st) * smoothstep(0.7, 0.0, mouseDist) * 0.35;
           }
 
@@ -85,19 +84,32 @@ const CanvasBackground = () => {
           q.x = fbm(st + u_time * 0.04);
           q.y = fbm(st + vec2(1.0));
 
-          vec2 r = vec2(0.0);
-          r.x = fbm(st + 1.0 * q + vec2(1.7, 9.2) + u_time * 0.12 + interaction);
-          r.y = fbm(st + 1.0 * q + vec2(8.3, 2.8) + u_time * 0.11);
+          float f = 0.0;
+          float intensityMult = 1.6;
+          float coreMult = 2.2;
 
-          float f = fbm(st + r);
+          // PERFORMANCE OPTIMIZATION: Branching based on device
+          if (u_isMobile > 0.5) {
+              // Mobile: Single-pass domain warp. Saves 10 noise calculations per fragment.
+              // Results in a sleeker, darker, ambient aurora effect.
+              f = fbm(st + q * 0.8 + u_time * 0.06);
+              intensityMult = 1.1; // Dimmer overall light
+              coreMult = 1.3;      // Less aggressive core highlighting
+          } else {
+              // Desktop: Full double-domain warp for chaotic fluid dynamics
+              vec2 r = vec2(0.0);
+              r.x = fbm(st + 1.0 * q + vec2(1.7, 9.2) + u_time * 0.12 + interaction);
+              r.y = fbm(st + 1.0 * q + vec2(8.3, 2.8) + u_time * 0.11);
+              f = fbm(st + r);
+          }
 
           // Diagonal bias to make the fluid sweep across the screen like an aurora
           float wavePattern = (1.0 - uv.y) * 1.1 - uv.x * 0.3; 
           float intensity = smoothstep(0.1, 0.8, wavePattern * f);
 
           // Color mixing based on noise intensity
-          vec3 color = mix(bgColor, color1, intensity * 1.6);
-          color = mix(color, color2, smoothstep(0.3, 1.0, intensity * f * 2.2));
+          vec3 color = mix(bgColor, color1, intensity * intensityMult);
+          color = mix(color, color2, smoothstep(0.3, 1.0, intensity * f * coreMult));
 
           // Localized interactive glow at the cursor tip
           if (u_isMobile < 0.5) {
@@ -159,17 +171,17 @@ const CanvasBackground = () => {
     let targetMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
     const resize = () => {
-      // Use devicePixelRatio for sharp rendering on retina displays
-      const dpr = window.devicePixelRatio || 1;
+      isMobile = window.innerWidth < 768 ? 1.0 : 0.0;
+      // PERFORMANCE OPTIMIZATION: Cap devicePixelRatio on mobile to 1.
+      // Rendering 3x fewer pixels saves massive GPU overhead.
+      const dpr = isMobile ? 1 : (window.devicePixelRatio || 1);
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
       gl.viewport(0, 0, canvas.width, canvas.height);
-      isMobile = window.innerWidth < 768 ? 1.0 : 0.0;
     };
 
     const handleMouseMove = (e) => {
       targetMouse.x = e.clientX;
-      // Invert Y axis for WebGL coordinate space
       targetMouse.y = window.innerHeight - e.clientY; 
     };
 
@@ -187,7 +199,6 @@ const CanvasBackground = () => {
 
       gl.uniform2f(resolutionLoc, canvas.width, canvas.height);
       gl.uniform1f(timeLoc, elapsed);
-      // Pass normalized mouse coordinates multiplied by DPR
       gl.uniform2f(mouseLoc, mouse.x * (window.devicePixelRatio || 1), mouse.y * (window.devicePixelRatio || 1));
       gl.uniform1f(isMobileLoc, isMobile);
 
